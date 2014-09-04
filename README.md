@@ -19,9 +19,16 @@ Running
 
 Let's start off by checking if zerotier image is properly working.
 
-For this we will launch the container in the foreground passing in the docker "--rm" flag to clean things up when we kill the container, the "--privileged" flag to provide access to the Tun module to ZeroTier.
+For this we will launch the container in the foreground passing in the docker "--rm" flag to clean things up when we kill the container.
+
+Docker versions before 1.2.0 need the "--privileged" flag to provide access to the Tun module to ZeroTier.
 ```bash
 docker run --rm --privileged=true nesrait/zerotier
+```
+
+Docker 1.2.0:
+```bash
+docker run --rm --device=/dev/net/tun --cap-add=NET_ADMIN nesrait/zerotier
 ```
 
 The output should show that the zerotier-one service is running as expected but it's not very clear how to use it.
@@ -29,26 +36,33 @@ We could have installed an SSH server inside the container to enable entering th
 
 Instead of connecting to the running container via SSH we will use [nsinit](http://jpetazzo.github.io/2014/03/23/lxc-attach-nsinit-nsenter-docker-0-9/). To install it follow [these instructions](https://registry.hub.docker.com/u/yungsang/nsinit/).
 
-Kill off the container running in the foreground and let's now run it as a daemon by passing the "-d" flag:
+Kill off the container running in the foreground and let's now run it as a daemon by passing the "-d" flag.
+
+Docker 1.1.0:
 ```bash
-ZTCONTAINERID=`docker run -d --privileged=true nesrait/zerotier`
+ZTCONTAINER=`docker run -d --privileged=true nesrait/zerotier`
 ```
 
-We store the container id on the ZTCONTAINERID environment variable because we'll need it ahead while using docker-nsinit.
+Docker 1.2.0:
+```bash
+ZTCONTAINER=`docker run -d --device=/dev/net/tun --cap-add=NET_ADMIN nesrait/zerotier`
+```
+
+We store the container id on the ZTCONTAINER environment variable because we'll need it ahead while using docker-nsinit.
 
 With the container running go ahead and join the [Planet Earth](https://www.zerotier.com/earth.html) public network:
 ```bash
-docker-nsinit $ZTCONTAINERID zerotier-cli join 8056c2e21c000001
+docker-nsinit $ZTCONTAINER zerotier-cli join 8056c2e21c000001
 ```
 
 After a few seconds a new network adapter should show up:
 ```bash
-docker-nsinit $ZTCONTAINERID ifconfig zt0
+docker-nsinit $ZTCONTAINER ifconfig zt0
 ```
 
 Now check out the earth homepage!
 ```bash
-docker-nsinit $ZTCONTAINERID curl http://earth.zerotier.net/
+docker-nsinit $ZTCONTAINER curl http://earth.zerotier.net/
 ```
 
 Note: if you're joining a private network you need to visit your [ZeroTier admin backend](https://www.zerotier.com/admin.html) and Authorize the new nodes. Only then will they receive an IP address and join the network.

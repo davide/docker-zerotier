@@ -31,6 +31,8 @@ Docker 1.2.0:
 docker run --rm --device=/dev/net/tun --cap-add=NET_ADMIN nesrait/zerotier
 ```
 
+[More details about docker cap-add here](http://opensource.com/business/14/9/security-for-docker)
+
 The output should show that the zerotier-one service is running as expected but it's not very clear how to use it.
 We could have installed an SSH server inside the container to enable entering the running container and interact with ZeroTier but that would create a more bloated image and an extra attack surface. Check out the ["Docker+SSH is Bad" topic](https://news.ycombinator.com/item?id=7950326).
 
